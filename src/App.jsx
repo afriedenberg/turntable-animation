@@ -96,6 +96,8 @@ function App() {
           ref={viewportRef}
           modelFile={modelFile}
           modelLoaded={modelLoaded}
+          canExport={canExport}
+          isExporting={isExporting}
           backgroundPreset={settings.backgroundPreset}
           rotationSpeed={settings.rotationSpeed}
           rotationAxis={settings.rotationAxis}
@@ -103,6 +105,7 @@ function App() {
           brightness={settings.brightness}
           reflection={settings.reflection}
           onOpenFilePicker={openFilePicker}
+          onExport={handleExport}
           onStatus={setStatus}
           onModelLoadedChange={setModelLoaded}
         />
@@ -132,10 +135,7 @@ function App() {
             settings.resolutionHeight <= 3840
           }
           isExporting={isExporting}
-          modelLoaded={modelLoaded}
-          onOpenFilePicker={openFilePicker}
           onSettingsChange={setSettings}
-          onExport={handleExport}
         />
         {status ? <p className="status">{status}</p> : null}
       </section>

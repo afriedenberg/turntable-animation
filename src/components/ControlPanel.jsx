@@ -3,10 +3,7 @@ function ControlPanel({
   calculatedFrameCount,
   isResolutionValid,
   isExporting,
-  modelLoaded,
-  onOpenFilePicker,
   onSettingsChange,
-  onExport,
 }) {
   const handleNumericChange = (key, value, min, max) => {
     const parsed = Number(value)
@@ -38,17 +35,6 @@ function ControlPanel({
 
   return (
     <div className="control-panel">
-      <label>
-        Model
-        <button
-          type="button"
-          disabled={isExporting}
-          onClick={onOpenFilePicker}
-        >
-          Upload OBJ/FBX
-        </button>
-      </label>
-
       <label>
         Background
         <select
@@ -203,14 +189,6 @@ function ControlPanel({
         </div>
       </label>
 
-      <button
-        type="button"
-        className="export-button"
-        disabled={!modelLoaded || isExporting || !isResolutionValid}
-        onClick={onExport}
-      >
-        {isExporting ? 'Exporting...' : 'Export MP4'}
-      </button>
     </div>
   )
 }

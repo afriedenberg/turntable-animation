@@ -19,6 +19,8 @@ const ViewportCanvas = forwardRef(function ViewportCanvas(
   {
     modelFile,
     modelLoaded,
+    canExport,
+    isExporting,
     backgroundPreset,
     rotationSpeed,
     rotationAxis,
@@ -26,6 +28,7 @@ const ViewportCanvas = forwardRef(function ViewportCanvas(
     brightness,
     reflection,
     onOpenFilePicker,
+    onExport,
     onStatus,
     onModelLoadedChange,
   },
@@ -317,12 +320,21 @@ const ViewportCanvas = forwardRef(function ViewportCanvas(
   return (
     <div className="viewport-wrap">
       <div className="viewport" ref={mountRef} />
-      {!modelLoaded && (
+      <div className="viewport-actions bottom">
         <button type="button" className="center-upload-button" onClick={onOpenFilePicker}>
           <span className="center-upload-title">Upload</span>
           <span className="center-upload-subtitle">(OBJ/FBX)</span>
         </button>
-      )}
+        <button
+          type="button"
+          className="center-upload-button viewport-export-button"
+          disabled={!canExport || isExporting}
+          onClick={onExport}
+        >
+          <span className="center-upload-title">Export</span>
+          <span className="center-upload-subtitle">(MP4)</span>
+        </button>
+      </div>
     </div>
   )
 })
