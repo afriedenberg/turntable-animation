@@ -63,6 +63,31 @@ function ControlPanel({
       </label>
 
       <label>
+        Resolution Width (px)
+        <input
+          type="number"
+          className="resolution-input"
+          value={settings.resolutionWidth}
+          disabled={isExporting}
+          onChange={(event) => handleUnboundedNumericChange('resolutionWidth', event.target.value)}
+        />
+      </label>
+
+      <label>
+        Resolution Height (px)
+        <input
+          type="number"
+          className="resolution-input"
+          value={settings.resolutionHeight}
+          disabled={isExporting}
+          onChange={(event) => handleUnboundedNumericChange('resolutionHeight', event.target.value)}
+        />
+      </label>
+      {!isResolutionValid ? (
+        <div className="slider-value">Resolution must be between 64 and 3840.</div>
+      ) : null}
+
+      <label>
         Revolutions
         <div className="slider-control">
           <span className="slider-bubble" style={sliderBubbleStyle(settings.lapCount, 0, 20)}>
@@ -127,31 +152,6 @@ function ControlPanel({
           <option value="counterclockwise">Counterclockwise</option>
         </select>
       </label>
-
-      <label>
-        Resolution Width (px)
-        <input
-          type="number"
-          className="resolution-input"
-          value={settings.resolutionWidth}
-          disabled={isExporting}
-          onChange={(event) => handleUnboundedNumericChange('resolutionWidth', event.target.value)}
-        />
-      </label>
-
-      <label>
-        Resolution Height (px)
-        <input
-          type="number"
-          className="resolution-input"
-          value={settings.resolutionHeight}
-          disabled={isExporting}
-          onChange={(event) => handleUnboundedNumericChange('resolutionHeight', event.target.value)}
-        />
-      </label>
-      {!isResolutionValid ? (
-        <div className="slider-value">Resolution must be between 64 and 3840.</div>
-      ) : null}
 
       <label>
         Brightness Multiplier
