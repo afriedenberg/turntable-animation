@@ -1,6 +1,7 @@
 function ControlPanel({
   settings,
   calculatedFrameCount,
+  isResolutionValid,
   isExporting,
   modelLoaded,
   onOpenFilePicker,
@@ -14,6 +15,25 @@ function ControlPanel({
     }
     const clamped = Math.max(min, Math.min(max, parsed))
     onSettingsChange((prev) => ({ ...prev, [key]: clamped }))
+  }
+
+  const getSliderPercent = (value, min, max) => {
+    if (max <= min) {
+      return 0
+    }
+    return ((value - min) / (max - min)) * 100
+  }
+
+  const sliderBubbleStyle = (value, min, max) => ({
+    left: `${getSliderPercent(value, min, max)}%`,
+  })
+
+  const handleUnboundedNumericChange = (key, value) => {
+    const parsed = Number(value)
+    if (Number.isNaN(parsed)) {
+      return
+    }
+    onSettingsChange((prev) => ({ ...prev, [key]: parsed }))
   }
 
   return (
@@ -57,30 +77,39 @@ function ControlPanel({
       </label>
 
       <label>
-        Rotation Lap Count
-        <input
-          type="number"
-          min={1}
-          max={100}
-          step={1}
-          value={settings.lapCount}
-          disabled={isExporting}
-          onChange={(event) => handleNumericChange('lapCount', event.target.value, 1, 100)}
-        />
+        Revolutions
+        <div className="slider-control">
+          <span className="slider-bubble" style={sliderBubbleStyle(settings.lapCount, 0, 20)}>
+            {settings.lapCount.toFixed(1)}
+          </span>
+          <input
+            type="range"
+            min={0}
+            max={20}
+            step={0.1}
+            value={settings.lapCount}
+            disabled={isExporting}
+            onChange={(event) => handleNumericChange('lapCount', event.target.value, 0, 20)}
+          />
+        </div>
       </label>
 
       <label>
         Rotation Speed (degrees/second)
-        <input
-          type="range"
-          min={0}
-          max={100}
-          step={0.1}
-          value={settings.rotationSpeed}
-          disabled={isExporting}
-          onChange={(event) => handleNumericChange('rotationSpeed', event.target.value, 0, 100)}
-        />
-        <span className="slider-value">{settings.rotationSpeed.toFixed(1)}</span>
+        <div className="slider-control">
+          <span className="slider-bubble" style={sliderBubbleStyle(settings.rotationSpeed, 0, 200)}>
+            {settings.rotationSpeed.toFixed(1)}
+          </span>
+          <input
+            type="range"
+            min={0}
+            max={200}
+            step={0.1}
+            value={settings.rotationSpeed}
+            disabled={isExporting}
+            onChange={(event) => handleNumericChange('rotationSpeed', event.target.value, 0, 200)}
+          />
+        </div>
       </label>
       <div className="slider-value">Calculated Frames: {calculatedFrameCount}</div>
 
@@ -117,11 +146,10 @@ function ControlPanel({
         Resolution Width (px)
         <input
           type="number"
-          min={240}
-          max={4096}
+          className="resolution-input"
           value={settings.resolutionWidth}
           disabled={isExporting}
-          onChange={(event) => handleNumericChange('resolutionWidth', event.target.value, 240, 4096)}
+          onChange={(event) => handleUnboundedNumericChange('resolutionWidth', event.target.value)}
         />
       </label>
 
@@ -129,48 +157,56 @@ function ControlPanel({
         Resolution Height (px)
         <input
           type="number"
-          min={240}
-          max={4096}
+          className="resolution-input"
           value={settings.resolutionHeight}
           disabled={isExporting}
-          onChange={(event) =>
-            handleNumericChange('resolutionHeight', event.target.value, 240, 4096)
-          }
+          onChange={(event) => handleUnboundedNumericChange('resolutionHeight', event.target.value)}
         />
       </label>
+      {!isResolutionValid ? (
+        <div className="slider-value">Resolution must be between 64 and 3840.</div>
+      ) : null}
 
       <label>
         Brightness Multiplier
-        <input
-          type="range"
-          min={0}
-          max={1000}
-          step={1}
-          value={settings.brightness}
-          disabled={isExporting}
-          onChange={(event) => handleNumericChange('brightness', event.target.value, 0, 1000)}
-        />
-        <span className="slider-value">{settings.brightness}</span>
+        <div className="slider-control">
+          <span className="slider-bubble" style={sliderBubbleStyle(settings.brightness, 0, 1000)}>
+            {settings.brightness}
+          </span>
+          <input
+            type="range"
+            min={0}
+            max={1000}
+            step={1}
+            value={settings.brightness}
+            disabled={isExporting}
+            onChange={(event) => handleNumericChange('brightness', event.target.value, 0, 1000)}
+          />
+        </div>
       </label>
 
       <label>
         Reflection (metalness)
-        <input
-          type="range"
-          min={0}
-          max={1}
-          step={0.01}
-          value={settings.reflection}
-          disabled={isExporting}
-          onChange={(event) => handleNumericChange('reflection', event.target.value, 0, 1)}
-        />
-        <span className="slider-value">{settings.reflection.toFixed(2)}</span>
+        <div className="slider-control">
+          <span className="slider-bubble" style={sliderBubbleStyle(settings.reflection, 0, 1)}>
+            {settings.reflection.toFixed(2)}
+          </span>
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.01}
+            value={settings.reflection}
+            disabled={isExporting}
+            onChange={(event) => handleNumericChange('reflection', event.target.value, 0, 1)}
+          />
+        </div>
       </label>
 
       <button
         type="button"
         className="export-button"
-        disabled={!modelLoaded || isExporting}
+        disabled={!modelLoaded || isExporting || !isResolutionValid}
         onClick={onExport}
       >
         {isExporting ? 'Exporting...' : 'Export MP4'}

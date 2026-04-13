@@ -6,7 +6,7 @@ const DEFAULT_SETTINGS = {
   backgroundPreset: 'white',
   fps: 30,
   lapCount: 1,
-  rotationSpeed: 2.0,
+  rotationSpeed: 50.0,
   rotationAxis: 'z',
   direction: 'clockwise',
   resolutionWidth: 1080,
@@ -22,7 +22,7 @@ function App() {
   const [settings, setSettings] = useState(DEFAULT_SETTINGS)
   const [modelLoaded, setModelLoaded] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
-  const [status, setStatus] = useState('Upload an OBJ or FBX to begin.')
+  const [status, setStatus] = useState('')
 
   const calculatedFrameCount = useMemo(() => {
     if (settings.rotationSpeed <= 0 || settings.lapCount <= 0 || settings.fps <= 0) {
@@ -33,10 +33,32 @@ function App() {
   }, [settings.rotationSpeed, settings.lapCount, settings.fps])
 
   const canExport = useMemo(() => {
-    return modelLoaded && !isExporting && calculatedFrameCount > 0
-  }, [modelLoaded, isExporting, calculatedFrameCount])
+    const isResolutionValid =
+      settings.resolutionWidth >= 64 &&
+      settings.resolutionWidth <= 3840 &&
+      settings.resolutionHeight >= 64 &&
+      settings.resolutionHeight <= 3840
+    return modelLoaded && !isExporting && calculatedFrameCount > 0 && isResolutionValid
+  }, [
+    modelLoaded,
+    isExporting,
+    calculatedFrameCount,
+    settings.resolutionWidth,
+    settings.resolutionHeight,
+  ])
 
   const handleExport = async () => {
+    const isResolutionValid =
+      settings.resolutionWidth >= 64 &&
+      settings.resolutionWidth <= 3840 &&
+      settings.resolutionHeight >= 64 &&
+      settings.resolutionHeight <= 3840
+
+    if (!isResolutionValid) {
+      setStatus('Resolution must be between 64 and 3840 for both width and height.')
+      return
+    }
+
     if (!viewportRef.current || !canExport) {
       return
     }
@@ -68,7 +90,7 @@ function App() {
   }
 
   return (
-    <main className="app-shell">
+    <main className={`app-shell ${settings.backgroundPreset === 'dark' ? 'theme-dark' : 'theme-light'}`}>
       <section className="viewport-column">
         <ViewportCanvas
           ref={viewportRef}
@@ -86,9 +108,9 @@ function App() {
         />
       </section>
       <section className="panel-column">
-        <h1>3D Turntable MP4 Exporter</h1>
+        <h1>3D Turntable Exporter</h1>
         <p className="intro">
-          Import OBJ/FBX geometry, preview a turntable, and export a deterministic MP4.
+          Import OBJ/FBX geometry, preview the animation, and export the video. Easy as that!
         </p>
         <input
           ref={fileInputRef}
@@ -103,13 +125,19 @@ function App() {
         <ControlPanel
           settings={settings}
           calculatedFrameCount={calculatedFrameCount}
+          isResolutionValid={
+            settings.resolutionWidth >= 64 &&
+            settings.resolutionWidth <= 3840 &&
+            settings.resolutionHeight >= 64 &&
+            settings.resolutionHeight <= 3840
+          }
           isExporting={isExporting}
           modelLoaded={modelLoaded}
           onOpenFilePicker={openFilePicker}
           onSettingsChange={setSettings}
           onExport={handleExport}
         />
-        <p className="status">{status}</p>
+        {status ? <p className="status">{status}</p> : null}
       </section>
     </main>
   )

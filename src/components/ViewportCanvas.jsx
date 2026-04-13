@@ -319,7 +319,8 @@ const ViewportCanvas = forwardRef(function ViewportCanvas(
       <div className="viewport" ref={mountRef} />
       {!modelLoaded && (
         <button type="button" className="center-upload-button" onClick={onOpenFilePicker}>
-          Upload OBJ/FBX
+          <span className="center-upload-title">Upload</span>
+          <span className="center-upload-subtitle">(OBJ/FBX)</span>
         </button>
       )}
     </div>
