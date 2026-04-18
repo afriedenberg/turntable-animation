@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import ControlPanel from './components/ControlPanel'
 import ViewportCanvas from './components/ViewportCanvas'
 
@@ -15,14 +15,46 @@ const DEFAULT_SETTINGS = {
   reflection: 0.3,
 }
 
+const SETTINGS_STORAGE_KEY = 'turntable-animation:settings'
+
+function readStoredSettings() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_STORAGE_KEY)
+    if (!raw) {
+      return { ...DEFAULT_SETTINGS }
+    }
+    const parsed = JSON.parse(raw)
+    if (typeof parsed !== 'object' || parsed === null) {
+      return { ...DEFAULT_SETTINGS }
+    }
+    const next = { ...DEFAULT_SETTINGS }
+    for (const key of Object.keys(DEFAULT_SETTINGS)) {
+      if (key in parsed) {
+        next[key] = parsed[key]
+      }
+    }
+    return next
+  } catch {
+    return { ...DEFAULT_SETTINGS }
+  }
+}
+
 function App() {
   const viewportRef = useRef(null)
   const fileInputRef = useRef(null)
   const [modelFile, setModelFile] = useState(null)
-  const [settings, setSettings] = useState(DEFAULT_SETTINGS)
+  const [settings, setSettings] = useState(readStoredSettings)
   const [modelLoaded, setModelLoaded] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
   const [status, setStatus] = useState('')
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings))
+    } catch {
+      // Ignore private mode / quota errors.
+    }
+  }, [settings])
 
   const calculatedFrameCount = useMemo(() => {
     if (settings.rotationSpeed <= 0 || settings.lapCount <= 0 || settings.fps <= 0) {
@@ -104,6 +136,8 @@ function App() {
           direction={settings.direction}
           brightness={settings.brightness}
           reflection={settings.reflection}
+          resolutionWidth={settings.resolutionWidth}
+          resolutionHeight={settings.resolutionHeight}
           onOpenFilePicker={openFilePicker}
           onExport={handleExport}
           onStatus={setStatus}

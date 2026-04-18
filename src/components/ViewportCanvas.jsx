@@ -3,7 +3,9 @@ import {
   forwardRef,
   useEffect,
   useImperativeHandle,
+  useMemo,
   useRef,
+  useState,
 } from 'react'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { exportTurntableMp4 } from '../lib/exportMp4'
@@ -27,6 +29,8 @@ const ViewportCanvas = forwardRef(function ViewportCanvas(
     direction,
     brightness,
     reflection,
+    resolutionWidth,
+    resolutionHeight,
     onOpenFilePicker,
     onExport,
     onStatus,
@@ -34,6 +38,7 @@ const ViewportCanvas = forwardRef(function ViewportCanvas(
   },
   ref,
 ) {
+  const stackRef = useRef(null)
   const mountRef = useRef(null)
   const rendererRef = useRef(null)
   const sceneRef = useRef(null)
@@ -51,6 +56,50 @@ const ViewportCanvas = forwardRef(function ViewportCanvas(
   const ringLightsRef = useRef([])
   const modelMaterialsRef = useRef([])
   const clockRef = useRef(new THREE.Clock())
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
+
+  const resolutionGuideSize = useMemo(() => {
+    const w = containerSize.width
+    const h = containerSize.height
+    const rw = Number(resolutionWidth)
+    const rh = Number(resolutionHeight)
+    if (w <= 0 || h <= 0 || !Number.isFinite(rw) || !Number.isFinite(rh) || rw <= 0 || rh <= 0) {
+      return { width: 0, height: 0 }
+    }
+    const exportAspect = rw / rh
+    const viewAspect = w / h
+    if (exportAspect > viewAspect) {
+      return { width: w, height: w / exportAspect }
+    }
+    return { width: h * exportAspect, height: h }
+  }, [containerSize.width, containerSize.height, resolutionWidth, resolutionHeight])
+
+  const showResolutionGuide =
+    resolutionWidth >= 64 &&
+    resolutionWidth <= 3840 &&
+    resolutionHeight >= 64 &&
+    resolutionHeight <= 3840 &&
+    resolutionGuideSize.width > 0 &&
+    resolutionGuideSize.height > 0
+
+  useEffect(() => {
+    const el = stackRef.current
+    if (!el) {
+      return undefined
+    }
+    const update = () => {
+      const rect = el.getBoundingClientRect()
+      setContainerSize({ width: rect.width, height: rect.height })
+    }
+    update()
+    const observer = new ResizeObserver(() => {
+      update()
+    })
+    observer.observe(el)
+    return () => {
+      observer.disconnect()
+    }
+  }, [])
 
   const convertToReflectiveMaterial = (material) => {
     if (material && 'metalness' in material) {
@@ -319,7 +368,20 @@ const ViewportCanvas = forwardRef(function ViewportCanvas(
 
   return (
     <div className="viewport-wrap">
-      <div className="viewport" ref={mountRef} />
+      <div className="viewport-stack" ref={stackRef}>
+        <div className="viewport" ref={mountRef} />
+        {showResolutionGuide ? (
+          <div className="resolution-guide" aria-hidden>
+            <div
+              className="resolution-guide-frame"
+              style={{
+                width: resolutionGuideSize.width,
+                height: resolutionGuideSize.height,
+              }}
+            />
+          </div>
+        ) : null}
+      </div>
       <div className="viewport-actions bottom">
         <button type="button" className="center-upload-button" onClick={onOpenFilePicker}>
           <span className="center-upload-title">Upload</span>
