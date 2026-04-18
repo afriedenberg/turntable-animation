@@ -56,6 +56,7 @@ const ViewportCanvas = forwardRef(function ViewportCanvas(
   const ringLightsRef = useRef([])
   const modelMaterialsRef = useRef([])
   const clockRef = useRef(new THREE.Clock())
+  const exportInProgressRef = useRef(false)
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
 
   const resolutionGuideSize = useMemo(() => {
@@ -227,10 +228,12 @@ const ViewportCanvas = forwardRef(function ViewportCanvas(
 
     const animate = () => {
       controls.update()
-      const signedSpeed = getSignedRotationSpeed(previewSpeedRef.current, directionRef.current)
-      const deltaSeconds = clockRef.current.getDelta()
-      previewAngleRef.current += getTurntableAngle(deltaSeconds, signedSpeed)
-      applyTurntableRotation(modelPivotRef.current.rotation, previewAxisRef.current, previewAngleRef.current)
+      if (!exportInProgressRef.current) {
+        const signedSpeed = getSignedRotationSpeed(previewSpeedRef.current, directionRef.current)
+        const deltaSeconds = clockRef.current.getDelta()
+        previewAngleRef.current += getTurntableAngle(deltaSeconds, signedSpeed)
+        applyTurntableRotation(modelPivotRef.current.rotation, previewAxisRef.current, previewAngleRef.current)
+      }
       renderer.render(scene, camera)
       animationIdRef.current = window.requestAnimationFrame(animate)
     }
@@ -334,6 +337,10 @@ const ViewportCanvas = forwardRef(function ViewportCanvas(
         controls.enabled = false
       }
 
+      exportInProgressRef.current = true
+      previewAngleRef.current = 0
+      applyTurntableRotation(modelPivot.rotation, axis, 0)
+
       let mp4Blob
       try {
         mp4Blob = await exportTurntableMp4({
@@ -351,6 +358,7 @@ const ViewportCanvas = forwardRef(function ViewportCanvas(
           onProgress,
         })
       } finally {
+        exportInProgressRef.current = false
         if (controls) {
           controls.enabled = true
         }
