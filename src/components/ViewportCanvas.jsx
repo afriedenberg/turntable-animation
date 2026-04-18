@@ -323,7 +323,7 @@ const ViewportCanvas = forwardRef(function ViewportCanvas(
       <div className="viewport-actions bottom">
         <button type="button" className="center-upload-button" onClick={onOpenFilePicker}>
           <span className="center-upload-title">Upload</span>
-          <span className="center-upload-subtitle">(OBJ/FBX)</span>
+          <span className="center-upload-subtitle">(OBJ/FBX/GLB)</span>
         </button>
         <button
           type="button"

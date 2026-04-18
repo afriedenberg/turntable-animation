@@ -1,9 +1,11 @@
 import * as THREE from 'three'
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js'
 
 const objLoader = new OBJLoader()
 const fbxLoader = new FBXLoader()
+const gltfLoader = new GLTFLoader()
 
 function normalizeModel(object3D) {
   const box = new THREE.Box3().setFromObject(object3D)
@@ -21,7 +23,7 @@ function normalizeModel(object3D) {
 
 export async function loadMeshFile(file) {
   if (!file) {
-    throw new Error('Please select an OBJ or FBX file first.')
+    throw new Error('Please select an OBJ, FBX, or GLB file first.')
   }
 
   const ext = file.name.toLowerCase().split('.').pop()
@@ -38,5 +40,11 @@ export async function loadMeshFile(file) {
     return normalizeModel(parsed)
   }
 
-  throw new Error('Unsupported format. Please upload a .obj or .fbx file.')
+  if (ext === 'glb') {
+    const buffer = await file.arrayBuffer()
+    const gltf = await gltfLoader.parseAsync(buffer, '')
+    return normalizeModel(gltf.scene)
+  }
+
+  throw new Error('Unsupported format. Please upload a .obj, .fbx, or .glb file.')
 }

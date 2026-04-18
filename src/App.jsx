@@ -113,13 +113,13 @@ function App() {
       <section className="panel-column">
         <h1>3D Turntable Exporter</h1>
         <p className="intro">
-          Import OBJ/FBX geometry, preview the animation, and export the video. Easy as that!
+          Import OBJ/FBX/GLB geometry, preview the animation, and export the video. Easy as that!
         </p>
         <input
           ref={fileInputRef}
           className="hidden-file-input"
           type="file"
-          accept=".obj,.fbx"
+          accept=".obj,.fbx,.glb"
           onChange={(event) => {
             const selected = event.target.files?.[0] ?? null
             setModelFile(selected)
