@@ -127,7 +127,6 @@ function App() {
         <ViewportCanvas
           ref={viewportRef}
           modelFile={modelFile}
-          modelLoaded={modelLoaded}
           canExport={canExport}
           isExporting={isExporting}
           backgroundPreset={settings.backgroundPreset}
@@ -139,6 +138,7 @@ function App() {
           resolutionWidth={settings.resolutionWidth}
           resolutionHeight={settings.resolutionHeight}
           onOpenFilePicker={openFilePicker}
+          onModelFileSelected={setModelFile}
           onExport={handleExport}
           onStatus={setStatus}
           onModelLoadedChange={setModelLoaded}

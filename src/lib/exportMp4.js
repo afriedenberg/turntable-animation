@@ -56,10 +56,17 @@ export async function exportTurntableMp4({
   const originalWidth = canvas.width
   const originalHeight = canvas.height
   const originalAspect = camera.aspect
+  const savedCanvasStyle = canvas.style.cssText
 
   renderer.setSize(resolutionWidth, resolutionHeight, false)
   camera.aspect = resolutionWidth / resolutionHeight
   camera.updateProjectionMatrix()
+
+  // Keep the on-screen preview from stretching: bitmap is export size, layout fills the viewport with uniform scale.
+  canvas.style.width = '100%'
+  canvas.style.height = '100%'
+  canvas.style.display = 'block'
+  canvas.style.objectFit = 'contain'
 
   try {
     for (let frame = 0; frame < frameCount; frame += 1) {
@@ -113,6 +120,7 @@ export async function exportTurntableMp4({
     renderer.setSize(originalWidth, originalHeight, false)
     camera.aspect = originalAspect
     camera.updateProjectionMatrix()
+    canvas.style.cssText = savedCanvasStyle
     renderer.render(scene, camera)
   }
 }

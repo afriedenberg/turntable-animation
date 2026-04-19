@@ -17,10 +17,21 @@ const BACKGROUND_PRESETS = {
   dark: '#000000',
 }
 
+const ALLOWED_MODEL_EXTENSIONS = new Set(['.obj', '.fbx', '.glb'])
+
+function getFileExtension(filename) {
+  const lower = filename.toLowerCase()
+  const dot = lower.lastIndexOf('.')
+  return dot >= 0 ? lower.slice(dot) : ''
+}
+
+function isAllowedModelFile(file) {
+  return ALLOWED_MODEL_EXTENSIONS.has(getFileExtension(file.name))
+}
+
 const ViewportCanvas = forwardRef(function ViewportCanvas(
   {
     modelFile,
-    modelLoaded,
     canExport,
     isExporting,
     backgroundPreset,
@@ -32,6 +43,7 @@ const ViewportCanvas = forwardRef(function ViewportCanvas(
     resolutionWidth,
     resolutionHeight,
     onOpenFilePicker,
+    onModelFileSelected,
     onExport,
     onStatus,
     onModelLoadedChange,
@@ -58,6 +70,40 @@ const ViewportCanvas = forwardRef(function ViewportCanvas(
   const clockRef = useRef(new THREE.Clock())
   const exportInProgressRef = useRef(false)
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
+  const [dragDepth, setDragDepth] = useState(0)
+
+  const handleDragEnter = (event) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setDragDepth((depth) => depth + 1)
+  }
+
+  const handleDragLeave = (event) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setDragDepth((depth) => Math.max(0, depth - 1))
+  }
+
+  const handleDragOver = (event) => {
+    event.preventDefault()
+    event.stopPropagation()
+    event.dataTransfer.dropEffect = 'copy'
+  }
+
+  const handleDrop = (event) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setDragDepth(0)
+    const file = event.dataTransfer.files?.[0] ?? null
+    if (!file) {
+      return
+    }
+    if (!isAllowedModelFile(file)) {
+      onStatus('Unsupported file type. Use OBJ, FBX, or GLB.')
+      return
+    }
+    onModelFileSelected(file)
+  }
 
   const resolutionGuideSize = useMemo(() => {
     const w = containerSize.width
@@ -215,6 +261,9 @@ const ViewportCanvas = forwardRef(function ViewportCanvas(
 
     const handleResize = () => {
       if (!mount || !rendererRef.current || !cameraRef.current) {
+        return
+      }
+      if (exportInProgressRef.current) {
         return
       }
       const { clientWidth, clientHeight } = mount
@@ -376,8 +425,20 @@ const ViewportCanvas = forwardRef(function ViewportCanvas(
 
   return (
     <div className="viewport-wrap">
-      <div className="viewport-stack" ref={stackRef}>
+      <div
+        className={`viewport-stack${dragDepth > 0 ? ' viewport-stack--drag' : ''}`}
+        ref={stackRef}
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+      >
         <div className="viewport" ref={mountRef} />
+        {dragDepth > 0 ? (
+          <div className="viewport-drop-overlay" aria-hidden="true">
+            <span className="viewport-drop-label">Drop model here (OBJ / FBX / GLB)</span>
+          </div>
+        ) : null}
         {showResolutionGuide ? (
           <div className="resolution-guide" aria-hidden>
             <div
